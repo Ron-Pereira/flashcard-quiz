@@ -1,0 +1,136 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Howl } from "howler";
+
+const questions = [
+  {
+    question: "Rajya Sabha: 238+12 members. Lok Sabha: ______________ members.",
+    options: ["525+25", "550+2", "520+30", "530+20"],
+    answer: "520+30",
+  },
+  {
+    question:
+      "The house has 550 members. On a particular day, 45 members are present. The Government wants to present a Bill. What do you think will happen?",
+    options: [
+      "The Government has a majority, so the Bill will be passed.",
+      "The Government cannot pass the Bill because the opposition is against it.",
+      "The Government is unable to introduce the Bill because the Speaker adjourns the House.",
+      "The Government can introduce the Bill but cannot pass it."
+    ],
+    answer:
+      "The Government is unable to introduce the Bill because the Speaker adjourns the House."
+  },
+  {
+    question: "Why should the Government introduce an ordinance in the Lok Sabha?",
+    options: [
+      "The Government needs the approval of only the Lok Sabha.",
+      "The Government needs the approval of the Opposition.",
+      "The Rajya Sabha has no power over an ordinance.",
+      "Every ordinance needs to be approved by both houses of the Parliament to become law."
+    ],
+    answer: "Every ordinance needs to be approved by both houses of the Parliament to become law."
+  },
+  {
+    question: "Identify the exclusive powers of the Lok Sabha.",
+    options: [
+      "P and Q",
+      "R and S",
+      "P and R",
+      "Q and S"
+    ],
+    answer: "P and R"
+  },
+  {
+    question: "Which of the following can make the amendment as shown in the picture?",
+    options: [
+      "The Parliament",
+      "The High Court",
+      "The Supreme Court",
+      "The President"
+    ],
+    answer: "The Parliament"
+  },
+  {
+    question: "Which advantage of the Lok Adalat is MOST highlighted in the above headline?",
+    options: [
+      "Saves money.",
+      "Speedy justice.",
+      "Works on compromise.",
+      "Reduces burden on Higher courts."
+    ],
+    answer: "Speedy justice."
+  }
+];
+
+const correctSound = new Howl({ src: ["/sounds/correct.mp3"] });
+const wrongSound = new Howl({ src: ["/sounds/wrong.mp3"] });
+const backgroundMusic = new Howl({ src: ["/sounds/pop_music.mp3"], loop: true });
+
+export default function FlashcardQuiz() {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(10);
+
+  useState(() => {
+    backgroundMusic.play();
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [currentQuestion]);
+
+  const handleAnswer = (option) => {
+    if (isAnswered) return;
+    setSelectedAnswer(option);
+    setIsAnswered(true);
+    if (option === questions[currentQuestion].answer) {
+      correctSound.play();
+      setScore(score + 1);
+    } else {
+      wrongSound.play();
+    }
+    setTimeout(() => {
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setTimeLeft(10);
+      setCurrentQuestion(currentQuestion + 1);
+    }, 2000);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4">
+      <Card className="w-full max-w-md p-4 bg-gray-800 shadow-xl">
+        <CardContent>
+          <h2 className="text-xl font-bold text-center">{questions[currentQuestion].question}</h2>
+          <Progress value={(timeLeft / 10) * 100} className="mt-2" />
+          <div className="grid grid-cols-1 gap-2 mt-4">
+            {questions[currentQuestion].options.map((option, index) => (
+              <motion.button
+                key={index}
+                className={`p-2 rounded-lg text-lg font-semibold transition-all ${
+                  isAnswered
+                    ? option === questions[currentQuestion].answer
+                      ? "bg-green-500"
+                      : option === selectedAnswer
+                      ? "bg-red-500"
+                      : "bg-gray-700"
+                    : "bg-gray-700 hover:bg-gray-600"
+                }`}
+                onClick={() => handleAnswer(option)}
+                disabled={isAnswered}
+              >
+                {option}
+              </motion.button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <p className="mt-4 text-lg">Score: {score}</p>
+    </div>
+  );
+}
